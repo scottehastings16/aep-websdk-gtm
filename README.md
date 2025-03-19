@@ -1,74 +1,94 @@
-# aep-websdk-gtm
-A Google Tag Manager (GTM) custom template for implementing the Adobe Experience Platform (AEP) Web SDK (Alloy) to send events and manage configurations efficiently.
 # Adobe Web SDK GTM Template
 
-This repository contains a custom Google Tag Manager (GTM) template for implementing the Adobe Experience Platform (AEP) Web SDK, also known as Alloy. The template simplifies the process of configuring the Adobe Web SDK, sending events, and managing personalization within a GTM environment.
+This repository contains a custom Google Tag Manager (GTM) template for implementing the Adobe Experience Platform (AEP) Web SDK, also known as Alloy. The template provides a robust interface to configure the SDK, send events with XDM payloads, and manage personalization within a GTM environment.
 
 ## Features
-- Configures and loads the Adobe Web SDK (Alloy) dynamically.
-- Supports event tracking (e.g., page views, link clicks) with XDM schema generation.
-- Handles personalization and decision scopes for Adobe Experience Manager (AEM) components.
-- Includes debug mode for troubleshooting via GTM debug or Adobe preview tokens.
-- Supports custom XDM data, identity mapping, and datastream overrides.
-- Compatible with multiple datastreams on the same page.
+- **Dynamic SDK Loading:** Loads the Adobe Web SDK (Alloy) from Adobe’s CDN with version control (default: `2.25.0`).
+- **Event Tracking:** Supports predefined events (`pageView`, `linkClick`) and custom event types with automated XDM schema population.
+- **Personalization:** Handles rendering of personalized content with decision scopes and component initialization for Adobe Experience Manager (AEM).
+- **Identity Management:** Configures the `identityMap` for user identification across namespaces.
+- **Adobe Integrations:** Supports profile updates for Adobe Target and custom data for Adobe Analytics via the `__adobe` object.
+- **Debugging:** Logs detailed information to the console when GTM debug mode (`gtm_debug=1`) or Adobe preview tokens (`at_preview_token`) are active.
+- **Configuration:** Allows global configuration of the SDK with support for multiple datastreams on the same page.
 
 ## Installation
 
 1. **Download the Template:**
-   - Clone this repository or download the `adobe-web-sdk-template.js` file.
+   - Clone this repository or download the `template.tpl` file.
 
 2. **Import into GTM:**
-   - In Google Tag Manager, navigate to **Templates** > **Tag Templates** > **New**.
+   - In Google Tag Manager, go to **Templates** > **Tag Templates** > **New**.
    - Click the three-dot menu in the top-right corner and select **Import**.
-   - Upload the `adobe-web-sdk-template.js` file and save the template.
+   - Upload the `template.tpl` file and save the template.
 
 3. **Set Up a Tag:**
-   - Create a new tag in GTM using the imported "Adobe Web SDK" template.
-   - Configure the required fields (e.g., Datastream ID, Organization ID) and optional settings (e.g., event type, custom XDM data).
+   - Create a new tag in GTM using the "AEP Web SDK" template.
+   - Configure required fields (e.g., `Organization ID`, `Datastream ID`) and optional settings (e.g., event type, personalization).
+   - Assign a trigger (e.g., "All Pages" for page views or "Link Click" for clicks).
 
 4. **Deploy:**
-   - Test the tag in GTM's preview mode, then publish your container.
+   - Test the tag in GTM’s preview mode, then publish your container.
 
 ## Usage
 
 ### Configuration
-- **Organization ID:** Your Adobe Experience Cloud organization ID.
-- **Datastream ID:** The Adobe datastream (formerly edge config) ID.
+The template configures the Web SDK once per page on the first tag execution. Key settings include:
+- **Organization ID:** Your Adobe Experience Cloud organization ID (e.g., `123ABC@AdobeOrg`).
+- **Datastream ID:** The Adobe datastream ID for event collection (required).
 - **Edge Domain:** Optional custom domain for Adobe Edge Network (e.g., `data.example.com`).
-- **Alloy Version:** Defaults to `2.25.0`. Override with a specific version if needed.
-- **Debug Mode:** Automatically enabled with `gtm_debug` or `at_preview_token` query parameters.
+- **Click Collection:** Enable automated link click tracking (optional).
+- **Debugging:** Log SDK activity to the console (not recommended for production).
 
 ### Event Types
-- **Page View:** Tracks page views with `web.webpagedetails.pageViews`.
-- **Link Click:** Tracks link clicks with `web.webinteraction.linkClicks`.
-- **Custom Event:** Specify a custom event type via `otherEventType`.
+- **Not Set:** Use for configuration-only tags or to define `type`/`xdm.eventType` via an event object.
+- **Page View (`web.webpagedetails.pageViews`):**
+  - Auto-populates `xdm.web.webPageDetails` (e.g., page name, server).
+  - Supports `xdm.marketing` for UTM parameters.
+- **Link Click (`web.webinteraction.linkClicks`):**
+  - Auto-populates `xdm.web.webInteraction` (e.g., URL, type) using GTM’s `gtm.linkClick` event.
+- **Other:** Specify a custom `eventType` (e.g., `decisioning.propositionDisplay`).
 
-### Data Layer Integration
-The template integrates with GTM's data layer for events like `gtm.linkClick` and can pull data from Adobe's `adobeDataLayer` for component interactions.
-
-### Personalization
-- Enable `renderDecisions` to fetch personalized content.
-- Use `decisionScopes` to specify personalization scopes.
-- Optionally initialize AEM components with rendered propositions.
+### Template Parameters
+The template provides a user-friendly interface in GTM:
+- **Event Group:**
+  - Event object, type selection, custom XDM, identity mapping, Adobe Target/Analytics data, and `sendBeacon` option.
+- **Content Group:**
+  - Render decisions, decision scopes, personalization properties, and component initialization.
+- **Configuration Group:**
+  - Settings object, override fields (e.g., `orgId`), and link tracking/debug options.
+- **Library Group:**
+  - Specify SDK version and toggle minified library usage.
 
 ### Example GTM Setup
-1. Create a tag with the "Adobe Web SDK" template.
-2. Set the event type to "Page View".
-3. Add your Organization ID and Datastream ID.
-4. Trigger the tag on "All Pages".
-5. Preview and debug to verify XDM payloads.
+1. Create a tag with the "AEP Web SDK" template.
+2. Set `Event Type` to "Page View".
+3. Enter your `Organization ID` and `Datastream ID`.
+4. Enable `Auto-populate web page details schema`.
+5. Trigger on "All Pages".
+6. Preview and verify the XDM payload in the console.
 
 ## Debugging
 - Enable GTM preview mode or append `?gtm_debug=1` to the URL.
-- Check the browser console for logs prefixed with `[AEP Web SDK]`.
+- Look for logs prefixed with `[AEP Web SDK]` in the browser console.
+- Use Adobe’s `at_preview_token` for additional debugging.
+
+## Permissions
+The template requires the following GTM sandbox permissions:
+- Logging to the console.
+- Global variable access (e.g., `alloy`, `adobeDataLayer`, `cep.initializeComponents`).
+- Script injection from `https://cdn1.adoberesources.net/alloy/*`.
+- Data layer reading and URL/title access.
 
 ## Dependencies
 - Adobe Web SDK (Alloy) library, loaded from `https://cdn1.adoberesources.net/alloy/`.
 - GTM environment with data layer support.
 
 ## Notes
-- The default Alloy version is `2.25.0`. Check [Adobe's release notes](https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/release-notes) for the latest version.
+- The default Alloy version is `2.25.0`. Update via the `Library > Version` field (see [release Notes](https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/release-notes)).
+- Ensure global variable permissions align with the template’s requirements (`alloy`, `alloy.q`, etc.).
+- Multiple datastreams are supported via overrides, but only one `orgId` and `edgeDomain` apply per page.
 
 ## Resources
 - [Adobe Web SDK Documentation](https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/home)
-- [Google Tag Manager Custom Templates](https://developers.google.com/tag-platform/tag-manager/templates)
+- [GTM Custom Templates](https://developers.google.com/tag-platform/tag-manager/templates)
+- [XDM Schema Reference](https://experienceleague.adobe.com/en/docs/experience-platform/xdm/home)
