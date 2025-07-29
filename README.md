@@ -1,94 +1,119 @@
-# Adobe Web SDK GTM Template
+# Google Tag Manager Template: AEP Web SDK
 
-This repository contains a custom Google Tag Manager (GTM) template for implementing the Adobe Experience Platform (AEP) Web SDK, also known as Alloy. The template provides a robust interface to configure the SDK, send events with XDM payloads, and manage personalization within a GTM environment.
+This document provides instructions on how to use the custom Google Tag Manager (GTM) template for deploying the Adobe Experience Platform (AEP) Web SDK (`alloy.js`).
+
+## Overview
+
+This GTM template simplifies the installation and configuration of the AEP Web SDK. It allows you to configure the SDK and send tracking events to the Adobe Edge Network from within the GTM interface. The template is designed to be a comprehensive solution for leveraging AEP Web SDK's capabilities, including event tracking, identity management, and personalization.
 
 ## Features
-- **Dynamic SDK Loading:** Loads the Adobe Web SDK (Alloy) from Adobe’s CDN with version control (default: `2.25.0`).
-- **Event Tracking:** Supports predefined events (`pageView`, `linkClick`) and custom event types with automated XDM schema population.
-- **Personalization:** Handles rendering of personalized content with decision scopes and component initialization for Adobe Experience Manager (AEM).
-- **Identity Management:** Configures the `identityMap` for user identification across namespaces.
-- **Adobe Integrations:** Supports profile updates for Adobe Target and custom data for Adobe Analytics via the `__adobe` object.
-- **Debugging:** Logs detailed information to the console when GTM debug mode (`gtm_debug=1`) or Adobe preview tokens (`at_preview_token`) are active.
-- **Configuration:** Allows global configuration of the SDK with support for multiple datastreams on the same page.
 
-## Installation
+-   **AEP Web SDK Loading**: Automatically loads the `alloy.js` library from Adobe's CDN.
+-   **Global Configuration**: Configure the SDK globally once per page load with your AEP settings.
+-   **Event Tracking**: Send data to AEP using the `sendEvent` command.
+    -   Pre-defined event types for **Page Views** and **Link Clicks**.
+    -   Support for any other custom event type.
+-   **Automatic Schema Population**: Automatically populate XDM fields for standard events from GTM variables and browser properties.
+-   **Flexible Data Mapping**:
+    -   Map data to any XDM path.
+    -   Configure `identityMap` for user identification.
+    -   Pass data specifically for Adobe Target and Adobe Analytics.
+-   **Personalization Support**:
+    -   Fetch and render personalized content from Adobe Target.
+    -   Specify decision scopes.
+-   **Debug Mode**: Enable console logging for the Web SDK to aid in debugging.
+-   **Data Layer Integration**: Pushes a confirmation event to the `dataLayer` when the SDK is ready.
 
-1. **Download the Template:**
-   - Clone this repository or download the `template.tpl` file.
+## Setup and Configuration
 
-2. **Import into GTM:**
-   - In Google Tag Manager, go to **Templates** > **Tag Templates** > **New**.
-   - Click the three-dot menu in the top-right corner and select **Import**.
-   - Upload the `template.tpl` file and save the template.
+Import the `template.tpl` file into your GTM workspace. Then, create a new tag and select the "AEP Web SDK" template. The configuration is divided into several sections:
 
-3. **Set Up a Tag:**
-   - Create a new tag in GTM using the "AEP Web SDK" template.
-   - Configure required fields (e.g., `Organization ID`, `Datastream ID`) and optional settings (e.g., event type, personalization).
-   - Assign a trigger (e.g., "All Pages" for page views or "Link Click" for clicks).
+### Event
 
-4. **Deploy:**
-   - Test the tag in GTM’s preview mode, then publish your container.
+This section controls the event being sent to AEP.
 
-## Usage
+| Field              | Description                                                                                                                                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Event object**   | A GTM variable that returns an object containing the data payload for the event. This object will be merged with the data configured in the tag UI.                                                      |
+| **Event type**     | The type of event to send.                                                                                                                                                                              |
+| _Not set_          | Use the tag for configuration only. No event will be sent unless the `type` or `xdm.eventType` is specified in the **Event object**.                                                                     |
+| _Page view_        | Sends a `web.webpagedetails.pageViews` event. Enables options for auto-populating marketing and web page details schemas.                                                                                 |
+| _Link click_       | Sends a `web.webinteraction.linkClicks` event. Enables options for auto-populating the web interaction schema. Should be used with a GTM Link Click trigger.                                             |
+| _Other_            | Specify a custom event type string (e.g., `commerce.purchases`).                                                                                                                                          |
+| **Custom XDM...**  | A table to map GTM variables or static values to specific XDM paths (e.g., `_myorg.customField`).                                                                                                         |
+| **XDM identityMap**| A table to configure user identities. Specify the namespace, ID, primary status, and authenticated state for each identity.                                                                             |
+| **Adobe Target...**| A table for sending profile attributes directly to Adobe Target.                                                                                                                                          |
+| **Custom Adobe...**| A table for sending data to Adobe Analytics that doesn't conform to the XDM schema, using the `__adobe.analytics` object.                                                                                 |
+| **Use sendBeacon** | If checked, uses the `sendBeacon` API for the event. This is useful for capturing events during page unload, like exit link clicks.                                                                       |
+
+### Content
+
+This section is for configuring personalization features, primarily for Adobe Target.
+
+| Field                                                  | Description                                                                                                                                                        |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Render personalized content...**                     | Set to `true` to allow the SDK to automatically render personalized content returned from the Edge Network. Requires a prehiding snippet on your page.                |
+| **Decision Scopes**                                    | A table to specify the decision scopes (e.g., `__view__`) to retrieve personalized content for.                                                                      |
+| **Personalization properties**                         | A table to populate the `personalization` object, passing key-value pairs that can influence which personalized content is selected.                                   |
+| **Create a callback to initialize rendered content**   | If checked, the template will attempt to call a global `cep.initializeComponents()` function after content is rendered, useful for re-initializing AEM components. |
+| **Custom callback**                                    | A GTM variable returning a JavaScript function to be executed as a callback after the `sendEvent` command completes. The result from the SDK is passed as an argument. |
 
 ### Configuration
-The template configures the Web SDK once per page on the first tag execution. Key settings include:
-- **Organization ID:** Your Adobe Experience Cloud organization ID (e.g., `123ABC@AdobeOrg`).
-- **Datastream ID:** The Adobe datastream ID for event collection (required).
-- **Edge Domain:** Optional custom domain for Adobe Edge Network (e.g., `data.example.com`).
-- **Click Collection:** Enable automated link click tracking (optional).
-- **Debugging:** Log SDK activity to the console (not recommended for production).
 
-### Event Types
-- **Not Set:** Use for configuration-only tags or to define `type`/`xdm.eventType` via an event object.
-- **Page View (`web.webpagedetails.pageViews`):**
-  - Auto-populates `xdm.web.webPageDetails` (e.g., page name, server).
-  - Supports `xdm.marketing` for UTM parameters.
-- **Link Click (`web.webinteraction.linkClicks`):**
-  - Auto-populates `xdm.web.webInteraction` (e.g., URL, type) using GTM’s `gtm.linkClick` event.
-- **Other:** Specify a custom `eventType` (e.g., `decisioning.propositionDisplay`).
+These settings configure the `alloy.js` instance itself. **They are applied only once per page**, using the values from the first AEP Web SDK tag that fires.
 
-### Template Parameters
-The template provides a user-friendly interface in GTM:
-- **Event Group:**
-  - Event object, type selection, custom XDM, identity mapping, Adobe Target/Analytics data, and `sendBeacon` option.
-- **Content Group:**
-  - Render decisions, decision scopes, personalization properties, and component initialization.
-- **Configuration Group:**
-  - Settings object, override fields (e.g., `orgId`), and link tracking/debug options.
-- **Library Group:**
-  - Specify SDK version and toggle minified library usage.
+| Field                                  | Description                                                                                                                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Settings object**                    | A GTM variable returning a configuration object. This is a convenient way to manage settings across multiple tags. Settings here can be overwritten by the fields below.      |
+| **Organization ID**                    | **Required.** Your Adobe Experience Cloud Organization ID.                                                                                                                   |
+| **Datastream ID**                      | **Required.** The ID of the AEP Datastream to send data to. You can use different IDs on different tags to send events to different datastreams from the same page.            |
+| **Edge domain**                        | The domain for the Edge Network (e.g., `edge.my-company.com`). Defaults to `edge.adobedc.net`.                                                                                |
+| **Enable automated link click tracking** | If checked, the SDK will automatically track all clicks on `<a>` tags. Be cautious using this with GTM's own link click triggers to avoid duplicate events.                 |
+| **Log Web SDK debug info...**          | If checked, enables verbose logging from `alloy.js` in the browser console. Do not enable in production.                                                                       |
 
-### Example GTM Setup
-1. Create a tag with the "AEP Web SDK" template.
-2. Set `Event Type` to "Page View".
-3. Enter your `Organization ID` and `Datastream ID`.
-4. Enable `Auto-populate web page details schema`.
-5. Trigger on "All Pages".
-6. Preview and verify the XDM payload in the console.
+### Library
 
-## Debugging
-- Enable GTM preview mode or append `?gtm_debug=1` to the URL.
-- Look for logs prefixed with `[AEP Web SDK]` in the browser console.
-- Use Adobe’s `at_preview_token` for additional debugging.
+This section controls which version of the `alloy.js` library is loaded.
 
-## Permissions
-The template requires the following GTM sandbox permissions:
-- Logging to the console.
-- Global variable access (e.g., `alloy`, `adobeDataLayer`, `cep.initializeComponents`).
-- Script injection from `https://cdn1.adoberesources.net/alloy/*`.
-- Data layer reading and URL/title access.
+| Field                                | Description                                                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| **Version**                          | The specific version of `alloy.js` to load (e.g., `2.25.0`). Defaults to the version specified in the template code. |
+| **Use the minified library**         | If checked (default), loads `alloy.min.js`. Uncheck for the non-minified version for easier debugging of the library itself. |
 
-## Dependencies
-- Adobe Web SDK (Alloy) library, loaded from `https://cdn1.adoberesources.net/alloy/`.
-- GTM environment with data layer support.
+## How It Works
 
-## Notes
-- The default Alloy version is `2.25.0`. Update via the `Library > Version` field (see [release Notes](https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/release-notes)).
-- Ensure global variable permissions align with the template’s requirements (`alloy`, `alloy.q`, etc.).
-- Multiple datastreams are supported via overrides, but only one `orgId` and `edgeDomain` apply per page.
+The template's sandboxed JavaScript performs the following actions:
 
-## Resources
-- [Adobe Web SDK Documentation](https://experienceleague.adobe.com/en/docs/experience-platform/web-sdk/home)
-- [GTM Custom Templates](https://developers.google.com/tag-platform/tag-manager/templates)
-- [XDM Schema Reference](https://experienceleague.adobe.com/en/docs/experience-platform/xdm/home)
+1.  **Initializes a global `alloy` function**: It sets up a global `alloy` function and a queue (`alloy.q`) on the `window` object. This ensures that any calls to the SDK can be queued before the library is fully loaded and configured.
+2.  **Loads `alloy.js`**: It checks if the `alloy.js` library has already been loaded on the page. If not, it injects the script from Adobe's CDN using the version and minification settings provided.
+3.  **Configures the SDK**: On the first tag execution on a page, it calls the `alloy('configure', ...)` command using the settings from the **Configuration** section. These settings are stored on a global `alloyConfig` object to prevent reconfiguration.
+4.  **Sends the Event**: After configuration, it calls the `alloy('sendEvent', ...)` command. It builds the event payload by:
+    -   Starting with the **Event object** variable, if provided.
+    -   Setting the `type` or `xdm.eventType` based on the **Event type** setting.
+    -   Automatically populating XDM schemas for page views and link clicks if enabled.
+    -   Merging data from the **Custom XDM**, **identityMap**, **Adobe Target**, and **Adobe Analytics** tables.
+    -   Applying personalization settings.
+
+## Data Layer Pushes
+
+After the AEP Web SDK has been successfully configured on a page, the template pushes an event to the `dataLayer`. This can be used to trigger subsequent tags that depend on the SDK being ready.
+
+-   **Event Name**: `alloy_ready`
+-   **Payload**: An object containing the configuration that was used.
+
+**Example `dataLayer` push:**
+
+```javascript
+{
+  event: 'alloy_ready',
+  alloy: {
+    orgId: '123ABC@AdobeOrg',
+    datastreamId: 'a1b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6',
+    clickCollectionEnabled: false,
+    debugEnabled: true,
+    // ... other config properties
+  }
+}
+```
+
+You can create a "Custom Event" trigger in GTM for the event name `alloy_ready` to sequence your tags. 
