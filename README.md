@@ -55,7 +55,7 @@ This section is for configuring personalization features, primarily for Adobe Ta
 | **Render personalized content...**                     | Set to `true` to allow the SDK to automatically render personalized content returned from the Edge Network. Requires a prehiding snippet on your page.                |
 | **Decision Scopes**                                    | A table to specify the decision scopes (e.g., `__view__`) to retrieve personalized content for.                                                                      |
 | **Personalization properties**                         | A table to populate the `personalization` object, passing key-value pairs that can influence which personalized content is selected.                                   |
-| **Create a callback to initialize rendered content**   | If checked, the template will attempt to call a global `cep.initializeComponents()` function after content is rendered, useful for re-initializing AEM components. |
+|
 | **Custom callback**                                    | A GTM variable returning a JavaScript function to be executed as a callback after the `sendEvent` command completes. The result from the SDK is passed as an argument. |
 
 ### Configuration
